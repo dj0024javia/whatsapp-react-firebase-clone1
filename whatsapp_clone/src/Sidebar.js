@@ -24,7 +24,6 @@ function Sidebar() {
   console.log(userDocId)
 
   useEffect(() => {
-    setAllChatUrls([])
     db.collection("userbase").doc(`${userDocId}`).collection("user_chats").onSnapshot(snapshot => {
       setAllChatUrls(snapshot.docs.map(doc => doc.data().chatId))
     })
@@ -174,6 +173,8 @@ function Sidebar() {
   console.log(rooms)
 
   const [commonchaturl, setCommonChatUrl] = useState('')
+
+
   const createNewChat = async () => {
     const email = prompt("Enter Email id of the person you want to chat with:")
     // const email = "dhavaljavia.p@gmail.com"
@@ -188,6 +189,7 @@ function Sidebar() {
       console.log("User Found!!")
       const friendDocId = snapshot.docs.map(doc => doc.id)
 
+      console.log(db.collection("userbase").doc(userDocId).collection("friends").where("id", "==", `${friendDocId}`).get())
 
       // Checking if friend is already there in our friendlist or not
       const snapshot1 = await db.collection("userbase").doc(userDocId).collection("friends").where("id", "==", `${friendDocId}`).get()
@@ -204,6 +206,24 @@ function Sidebar() {
       else {
         console.log("friend is already present in your friendlist!!")
       }
+
+      // Adding your name in friend's friendlist
+
+      const snapshot_friend = await db.collection("userbase").doc(friendDocId[0]).collection("friends").where("id", "==", `${userDocId}`).get()
+
+
+      // Friend is not present. Add him
+      if (snapshot_friend.empty) {
+        console.log("You are not in your friend's friendlist. Adding now.")
+        db.collection("userbase").doc(friendDocId[0]).collection("friends").add({
+          id: userDocId
+        })
+      }
+      // Friend is present
+      else {
+        console.log("You are there in your friendlist!! Start Chatting.")
+      }
+
 
       // Loop through your chats, check each chat if user1/user2 is your new friend, if it is the case, then set commonchaturl to that chatid.
 
