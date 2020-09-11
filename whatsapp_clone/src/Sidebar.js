@@ -24,6 +24,7 @@ function Sidebar() {
   console.log(userDocId)
 
   useEffect(() => {
+    setAllChatUrls([])
     db.collection("userbase").doc(`${userDocId}`).collection("user_chats").onSnapshot(snapshot => {
       setAllChatUrls(snapshot.docs.map(doc => doc.data().chatId))
     })
@@ -33,86 +34,89 @@ function Sidebar() {
   // console.log(allchaturls)
 
   useEffect(() => {
-    setFriendList([])
-    allchaturls.map(url => {
-      db.collection("chats").doc(url).onSnapshot(snapshot => {
-        if (snapshot.data().user1 === userDocId) {
+    console.log(allchaturls, allchaturls.length)
+    if (allchaturls.length != 0) {
+      setFriendList([])
+      allchaturls.map(url => {
+        db.collection("chats").doc(url).onSnapshot(snapshot => {
+          if (snapshot.data().user1 === userDocId) {
 
-          db.collection("userbase").doc(snapshot.data().user2).onSnapshot(snapshot2 =>
-            (
-              setFriendList(
-                friendlist =>
-                  [
-                    ...friendlist,
-                    {
-                      "id": snapshot2.data().id,
-                      "name": snapshot2.data().name,
-                      "photo": snapshot2.data().photo,
-                      "email": snapshot2.data().email,
-                      "chatURL": url,
-                    }
-                  ]
+            db.collection("userbase").doc(snapshot.data().user2).onSnapshot(snapshot2 =>
+              (
+                setFriendList(
+                  friendlist =>
+                    [
+                      ...friendlist,
+                      {
+                        "id": snapshot2.data().id,
+                        "name": snapshot2.data().name,
+                        "photo": snapshot2.data().photo,
+                        "email": snapshot2.data().email,
+                        "chatURL": url,
+                      }
+                    ]
+                )
               )
+
+              // {
+              //   dispatch(
+              //     {
+              //       type: actionTypes.SET_FRNDLST,
+              //       allfriendlist:
+              //       {
+              //         "id": snapshot2.data().id,
+              //         "name": snapshot2.data().name,
+              //         "photo": snapshot2.data().photo,
+              //         "email": snapshot2.data().email,
+              //         "url": url
+              //       }
+              //     }
+              //   )
+              // }
             )
 
-            // {
-            //   dispatch(
-            //     {
-            //       type: actionTypes.SET_FRNDLST,
-            //       allfriendlist:
-            //       {
-            //         "id": snapshot2.data().id,
-            //         "name": snapshot2.data().name,
-            //         "photo": snapshot2.data().photo,
-            //         "email": snapshot2.data().email,
-            //         "url": url
-            //       }
-            //     }
-            //   )
-            // }
-          )
 
+          }
+          else {
 
-        }
-        else {
-
-          db.collection("userbase").doc(snapshot.data().user1).onSnapshot(snapshot3 =>
-            (
-              setFriendList(
-                friendlist =>
-                  [
-                    ...friendlist,
-                    {
-                      "id": snapshot3.data().id,
-                      "name": snapshot3.data().name,
-                      "photo": snapshot3.data().photo,
-                      "email": snapshot3.data().email,
-                      "chatURL": url,
-                    }
-                  ]
+            db.collection("userbase").doc(snapshot.data().user1).onSnapshot(snapshot3 =>
+              (
+                setFriendList(
+                  friendlist =>
+                    [
+                      ...friendlist,
+                      {
+                        "id": snapshot3.data().id,
+                        "name": snapshot3.data().name,
+                        "photo": snapshot3.data().photo,
+                        "email": snapshot3.data().email,
+                        "chatURL": url,
+                      }
+                    ]
+                )
               )
+
+              // {
+              //   dispatch(
+              //     {
+              //       type: actionTypes.SET_FRNDLST,
+              //       allfriendlist:
+              //       {
+              //         "id": snapshot2.data().id,
+              //         "name": snapshot2.data().name,
+              //         "photo": snapshot2.data().photo,
+              //         "email": snapshot2.data().email,
+              //         "url": url
+              //       }
+              //     }
+              //   )
+              // }
             )
 
-            // {
-            //   dispatch(
-            //     {
-            //       type: actionTypes.SET_FRNDLST,
-            //       allfriendlist:
-            //       {
-            //         "id": snapshot2.data().id,
-            //         "name": snapshot2.data().name,
-            //         "photo": snapshot2.data().photo,
-            //         "email": snapshot2.data().email,
-            //         "url": url
-            //       }
-            //     }
-            //   )
-            // }
-          )
-
-        }
+          }
+        })
       })
-    })
+    }
 
     // dispatch({
     //   type: actionTypes.SET_FRNDLST,
@@ -203,7 +207,7 @@ function Sidebar() {
 
       // Loop through your chats, check each chat if user1/user2 is your new friend, if it is the case, then set commonchaturl to that chatid.
 
-      if (!allchaturls) {
+      if (allchaturls.length === 0) {
 
         console.log("ChatList is Empty...creating one now")
         db.collection("chats")
@@ -240,66 +244,66 @@ function Sidebar() {
               });
 
           })
-      }
+      } else {
+        allchaturls.map(url => {
+          const chatDocData = db.collection("chats").doc(url).onSnapshot(snapshot3 => snapshot3.data())
 
-      allchaturls.map(url => {
-        const chatDocData = db.collection("chats").doc(url).onSnapshot(snapshot3 => snapshot3.data())
+          if (chatDocData.user1 === friendDocId[0] || chatDocData.user2 === friendDocId[0]) {
+            console.log("Chat already exits.", url)
+            setCommonChatUrl(url)
+          }
+          // if not, then create new chat id with user1 as you, user2 as opponent party, get that newly created docId, set it inside user_chats of both you and friend's doc.
+          else {
+            console.log("ChatId does not exist in your user_chats")
+            db.collection("chats")
+              .add({
+                user1: userDocId,
+                user2: friendDocId[0],
+                keepChatAgreement: [true, true]
+              })
+              .then((docRef) => {
+                console.log("Document written with ID: ", docRef.id);
 
-        if (chatDocData.user1 === friendDocId[0] || chatDocData.user2 === friendDocId[0]) {
-          console.log("Chat already exits.", url)
-          setCommonChatUrl(url)
-        }
-        // if not, then create new chat id with user1 as you, user2 as opponent party, get that newly created docId, set it inside user_chats of both you and friend's doc.
-        else {
-          console.log("ChatId does not exist in your user_chats")
-          db.collection("chats")
-            .add({
-              user1: userDocId,
-              user2: friendDocId[0],
-              keepChatAgreement: [true, true]
-            })
-            .then((docRef) => {
-              console.log("Document written with ID: ", docRef.id);
+                db.collection("userbase").doc(userDocId).collection("user_chats")
+                  .add({
+                    chatId: docRef.id
+                  })
+                  .then(function (docRef1) {
+                    console.log("ChatDocId added in user_chats with ID: ", docRef1.id);
+                  })
+                  .catch(function (error) {
+                    console.error("Error adding document in user_chats: ", error);
+                  });
 
-              db.collection("userbase").doc(userDocId).collection("user_chats")
-                .add({
-                  chatId: docRef.id
-                })
-                .then(function (docRef1) {
-                  console.log("ChatDocId added in user_chats with ID: ", docRef1.id);
-                })
-                .catch(function (error) {
-                  console.error("Error adding document in user_chats: ", error);
-                });
-
-              db.collection("userbase").doc(friendDocId[0]).collection("user_chats")
-                .add({
-                  chatId: docRef.id
-                })
-                .then(function (docRef2) {
-                  console.log("ChatDocId added in user_chats with ID: ", docRef2.id);
-                })
-                .catch(function (error) {
-                  console.error("Error adding document in user_chats: ", error);
-                });
+                db.collection("userbase").doc(friendDocId[0]).collection("user_chats")
+                  .add({
+                    chatId: docRef.id
+                  })
+                  .then(function (docRef2) {
+                    console.log("ChatDocId added in user_chats with ID: ", docRef2.id);
+                  })
+                  .catch(function (error) {
+                    console.error("Error adding document in user_chats: ", error);
+                  });
 
 
-            })
-            .catch((error) => {
-              console.error("Error adding document: ", error);
-            });
-        }
-      })
-
-      // checking if your user id  is presnet in friend's user_chats list.
-
-      db.collection("userbase").doc(friendDocId[0]).collection("user_chats").onSnapshot(snapshot => {
-        snapshot.docs.map(doc => {
-          const fChatId = doc.data().chatId;
-          const fChatIdData = db.collection("chats").doc(fChatId).get()
-          console.log(fChatIdData)
+              })
+              .catch((error) => {
+                console.error("Error adding document: ", error);
+              });
+          }
         })
-      })
+
+        // checking if your user id  is presnet in friend's user_chats list.
+
+        db.collection("userbase").doc(friendDocId[0]).collection("user_chats").onSnapshot(snapshot => {
+          snapshot.docs.map(doc => {
+            const fChatId = doc.data().chatId;
+            const fChatIdData = db.collection("chats").doc(fChatId).get()
+            console.log(fChatIdData)
+          })
+        })
+      }
     }
 
   }
