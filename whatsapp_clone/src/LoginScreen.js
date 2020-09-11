@@ -10,36 +10,32 @@ import { actionTypes } from './reducer'
 function LoginScreen() {
 
     const [{ }, dispatch] = useStateValue()
-    const [tempUserDocId, setTempUserDocId] = useState([])
+    const [tempUserDetails, setTempUserDetails] = useState('')
 
-    const signIn = () => {
-        auth.signInWithPopup(provider).then((result) => {
+    const signIn = async () => {
+        auth.signInWithPopup(provider).then(async (result) => {
             console.log(result)
             dispatch({
                 type: actionTypes.SET_USER,
                 user: result.user
             });
+            // setTempUserDetails(result);
 
-            const firebaseuser = db.collection("userbase")
-                .where("id", "==", `${result.user.uid}`);
+            const snapshot1 = await db.collection("userbase")
+                .where("id", "==", `${result.user.uid}`).get()
 
-            console.log(firebaseuser.uid);
-
-            if (!(result.user.metadata.creationTime === result.user.metadata.lastSignInTime)) {
+            await console.log(snapshot1)
+            if (!snapshot1.empty) {
                 // Existing User
-                firebaseuser.get()
-                    .then((snapshot) => {
-                        snapshot.docs.map((doc) => {
+                snapshot1
+                    .docs.map(
+                        (doc) => {
                             dispatch({
                                 type: actionTypes.SET_USERDOCID,
                                 userDocId: doc.id
                             });
-
-                        });
-                    }).catch(function (error) {
-                        console.log("Error getting documents: ", error);
-                    })
-
+                        }
+                    )
                 // Add chatUrls to store.
             }
             else {
@@ -53,8 +49,8 @@ function LoginScreen() {
                 // Since the user is new, add empty chatIds to store.
             }
 
-
         }).catch(error => alert(error.message))
+
     };
     // ).catch (error => alert(error.message))
     // }
