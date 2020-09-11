@@ -32,7 +32,6 @@ function Sidebar() {
 
   // console.log(allchaturls)
 
-
   useEffect(() => {
     setFriendList([])
     allchaturls.map(url => {
