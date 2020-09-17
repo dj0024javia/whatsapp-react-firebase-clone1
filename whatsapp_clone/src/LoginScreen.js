@@ -4,6 +4,7 @@ import { Button } from '@material-ui/core'
 import db, { auth, provider } from './firebase'
 import { useStateValue } from './StateProvider'
 import { actionTypes } from './reducer'
+import { useHistory } from 'react-router-dom'
 // import fetchAllMsgs from './fetchAllMsgs'
 // import result from './Dummyuser'
 
@@ -12,13 +13,18 @@ function LoginScreen() {
     const [{ }, dispatch] = useStateValue()
     const [tempUserDetails, setTempUserDetails] = useState('')
 
-    const signIn = async () => {
+    const signIn = async (e) => {
+        e.preventDefault();
+
         auth.signInWithPopup(provider).then(async (result) => {
             console.log(result)
-            dispatch({
-                type: actionTypes.SET_USER,
-                user: result.user
-            });
+            if (result) {
+
+                dispatch({
+                    type: actionTypes.SET_USER,
+                    user: result.user
+                });
+            }
             // setTempUserDetails(result);
 
             const snapshot1 = await db.collection("userbase")
@@ -48,6 +54,7 @@ function LoginScreen() {
                 })
                 // Since the user is new, add empty chatIds to store.
             }
+
 
         }).catch(error => alert(error.message))
 

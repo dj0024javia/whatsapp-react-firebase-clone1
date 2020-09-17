@@ -7,6 +7,8 @@ import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import LoginScreen from './LoginScreen';
 import { useStateValue } from './StateProvider';
 import db from './firebase';
+import { auth } from './firebase';
+import { actionTypes } from './reducer';
 
 
 
@@ -16,7 +18,37 @@ function App() {
 
   console.log(userDocId)
 
+  useEffect(() => {
 
+    auth.onAuthStateChanged(authUser => {
+      console.log("AuthUser is :", authUser)
+
+      if (authUser) {
+        dispatch({
+          type: actionTypes.SET_USER,
+          user: authUser
+        })
+      }
+      else {
+        dispatch({
+          type: actionTypes.SET_USER,
+          user: null
+        });
+
+        dispatch({
+          type: actionTypes.SET_FRNDLST,
+          allfriendlist: []
+        })
+
+        dispatch({
+          type: actionTypes.SET_USERDOCID,
+          userDocId: null
+        })
+
+      }
+
+    })
+  }, [])
 
   return (
 
