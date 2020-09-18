@@ -53,12 +53,18 @@ function Chat() {
 
       db.collection("chats").doc(chatId).onSnapshot(snapshot => {
         if (snapshot.data().user1.trim() === userDocId) {
-          setRoomName(
-            db.collection("userbase")
-              .doc(snapshot.data().user2.trim()).onSnapshot(snapshot =>
-                snapshot.data().name
-              )
-          )
+
+          db.collection("userbase")
+            .doc(snapshot.data().user2.trim()).onSnapshot(snapshot =>
+              setRoomName(snapshot.data().name)
+            )
+
+        }
+        else {
+          db.collection("userbase")
+            .doc(snapshot.data().user1.trim()).onSnapshot(snapshot =>
+              setRoomName(snapshot.data().name)
+            )
         }
       })
 
@@ -108,7 +114,7 @@ function Chat() {
             <div className="chat__headerInfo">
               <h3>{roomName}</h3>
               <p>{
-                new Date(allmessages[allmessages.length - 1]?.timestamp?.toDate()).toUTCString()
+                new Date(allusermsgs[allusermsgs.length - 1]?.timestamp?.toDate()).toUTCString()
               }</p>
             </div>
           )}
