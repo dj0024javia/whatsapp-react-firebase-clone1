@@ -14,13 +14,11 @@ import { actionTypes } from './reducer';
 
 function App() {
   // const [user, setUser] = useState(null)
-  const [{ user, userDocId }, dispatch] = useStateValue()
-
-  console.log(userDocId)
-
+  const [{ user, userDocId, friendDocId }, dispatch] = useStateValue()
+  console.log(friendDocId)
   useEffect(() => {
 
-    auth.onAuthStateChanged(authUser => {
+    auth.onAuthStateChanged(async authUser => {
       console.log("AuthUser is :", authUser)
 
       if (authUser) {
@@ -28,6 +26,24 @@ function App() {
           type: actionTypes.SET_USER,
           user: authUser
         })
+
+        const snapshot1 = await db.collection("userbase")
+          .where("id", "==", `${authUser.uid}`).get()
+
+        await console.log(snapshot1)
+        if (!snapshot1.empty) {
+          // Existing User
+          snapshot1
+            .docs.map(
+              (doc) => {
+                dispatch({
+                  type: actionTypes.SET_USERDOCID,
+                  userDocId: doc.id
+                });
+              }
+            )
+          // Add chatUrls to store.
+        }
       }
       else {
         dispatch({
@@ -35,15 +51,15 @@ function App() {
           user: null
         });
 
-        dispatch({
-          type: actionTypes.SET_FRNDLST,
-          allfriendlist: []
-        })
+        // dispatch({
+        //   type: actionTypes.SET_FRNDLST,
+        //   allfriendlist: []
+        // })
 
-        dispatch({
-          type: actionTypes.SET_USERDOCID,
-          userDocId: null
-        })
+        // dispatch({
+        //   type: actionTypes.SET_USERDOCID,
+        //   userDocId: null
+        // })
 
       }
 

@@ -2,7 +2,11 @@
 // Declaring InitialState - contains all variables which you want to use later on for deep layers. Predefined user variable with default value.
 export const initialState = {
     user: null,
-    allfriendlist: []
+    allfriendlist: [],
+    userDocId: null,
+    friendDocId: null,
+    commonchaturl: null,
+
 }
 
 
@@ -10,7 +14,10 @@ export const initialState = {
 export const actionTypes = {
     SET_USER: "SET_USER",
     SET_USERDOCID: "SET_USERDOCID",
-    SET_FRNDLST: "SET_FRNDLST"
+    SET_FRNDLST: "SET_FRNDLST",
+    SET_FRNDDOCID: "SET_FRNDDOCID",
+    COMMON_CHAT_URL: "COMMON_CHAT_URL",
+
 }
 
 
@@ -28,6 +35,15 @@ const reducer = (state, action) => {
         case actionTypes.SET_FRNDLST:
             return {
                 ...state, allfriendlist: [...state.allfriendlist, action.friendlist]
+            }
+        case actionTypes.SET_FRNDDOCID:
+            return {
+                ...state, friendDocId: action.friendDocId
+            }
+
+        case actionTypes.COMMON_CHAT_URL:
+            return {
+                ...state, commonchaturl: action.commonchaturl
             }
         default:
             return state;

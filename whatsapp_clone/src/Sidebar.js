@@ -14,13 +14,25 @@ import { auth } from "./firebase";
 
 function Sidebar() {
   const [rooms, setRooms] = useState([]);
-  const [{ user, userDocId }, dispatch] = useStateValue();
-  const [users, setUsers] = useState([]);
+  // const [present, setPresent] = useState(false)
+  const [flag1, setFlag1] = useState(false)
+  const [flag2, setFlag2] = useState(false)
+  const [flag3, setFlag3] = useState(false)
+  const [flag4, setFlag4] = useState(false)
+  const [goSetChat, setGoSetChat] = useState(false)
+  const [present1, setPresent1] = useState(false)
+  const [present2, setPresent2] = useState(false)
+
+  const [{ user, userDocId, friendDocId, commonchaturl }, dispatch] = useStateValue();
+  // const [exeuseEf, setExeUseEf] = useState(false);
   const { chatId } = useParams()
 
   const [allchaturls, setAllChatUrls] = useState([])
   const [friendlist, setFriendList] = useState([])
   const [chatdocscombined, setDocsCombined] = useState([])
+  const [commonchaturl1, setCommonChatUrl1] = useState('')
+  const [friendChatIds, setFriendChatIds] = useState([])
+
 
   console.log(userDocId)
 
@@ -48,109 +60,148 @@ function Sidebar() {
   }
 
   useEffect(() => {
-    db.collection("userbase").doc(`${userDocId}`).collection("user_chats").onSnapshot(snapshot => {
-      setAllChatUrls(snapshot.docs.map(doc => doc.data().chatId))
-    })
-    console.log(`All Chat URLs:${allchaturls}`)
+    async function fetchData() {
+      const temp = []
+      setAllChatUrls(temp)
+      await db.collection("userbase").doc(`${userDocId}`).collection("user_chats").onSnapshot((snapshot) =>
+        (setAllChatUrls(snapshot.docs.map(doc => doc.data().chatId)))
+      )
+      console.log(`All Chat URLs:${allchaturls}`)
+      setFlag1(true)
+    }
+
+    fetchData();
+
   }, [userDocId])
+
+
+
+  useEffect(() => {
+
+    async function fetchData() {
+      // You can await here
+
+      console.log("Flag3:", flag3, "FriendDocId:", friendDocId)
+      if (flag3 && friendDocId) {
+        console.log("success1")
+        db.collection("userbase").doc(`${friendDocId}`).collection("user_chats").onSnapshot((snapshot) =>
+          (setFriendChatIds(
+            snapshot.docs.map
+              (doc => doc.data().chatId)
+          ))
+        )
+        setFlag3(false)
+      }
+      // ...
+    }
+    fetchData();
+
+
+    // async () => {
+    //   if (friendDocId) {
+    //     console.log("FriendDocId received UseEffect:", friendDocId)
+    //     db.collection("userbase").doc(`${friendDocId}`).collection("user_chats").onSnapshot((snapshot) =>
+    //       (setFriendChatIds(snapshot.docs.map(doc => doc.data().chatId)))
+    //     )
+    //     console.log(`All Friend's Chat URLs:${friendChatIds}`)
+
+    //   }
+    // }
+  }, [flag3])
+
+  // const [friendDocId, setFriendDocId] = useState()
 
   // console.log(allchaturls)
 
   // Setting FriendDetails based on your chat urls.
   useEffect(() => {
-    console.log(allchaturls, allchaturls.length)
-    if (allchaturls.length != 0) {
-      setFriendList([])
-      allchaturls.map(url => {
-        db.collection("chats").doc(url).onSnapshot(snapshot => {
-          // Checking if user1 is me??
-          if (snapshot.data().user1 === userDocId) {
+    async function fetchData() {
+      console.log("Flag1:", flag1, "AllChatURLs:", allchaturls, "AllChatURL Length:", allchaturls.length)
+      if (flag1 && allchaturls) {
+        // const temp = []
+        // setFriendList(temp);
+        if (allchaturls.length !== 0) {
 
-            db.collection("userbase").doc(snapshot.data().user2).onSnapshot(snapshot2 =>
-              (
-                setFriendList(
-                  friendlist =>
-                    [
-                      ...friendlist,
-                      {
-                        "id": snapshot2.data().id,
-                        "name": snapshot2.data().name,
-                        "photo": snapshot2.data().photo,
-                        "email": snapshot2.data().email,
-                        "chatURL": url,
-                      }
-                    ]
+          allchaturls.map(url => {
+            db.collection("chats").doc(url).onSnapshot(snapshot => {
+              // Checking if user1 is me??
+              if (snapshot.data().user1 === userDocId) {
+
+                db.collection("userbase").doc(snapshot.data().user2).onSnapshot(snapshot2 =>
+                  (
+                    setFriendList(
+                      friendlist =>
+                        [
+                          ...friendlist,
+                          {
+                            "id": snapshot2.data().id,
+                            "name": snapshot2.data().name,
+                            "photo": snapshot2.data().photo,
+                            "email": snapshot2.data().email,
+                            "chatURL": url,
+                          }
+                        ]
+                    )
+                  )
                 )
-              )
-
-              // {
-              //   dispatch(
-              //     {
-              //       type: actionTypes.SET_FRNDLST,
-              //       allfriendlist:
-              //       {
-              //         "id": snapshot2.data().id,
-              //         "name": snapshot2.data().name,
-              //         "photo": snapshot2.data().photo,
-              //         "email": snapshot2.data().email,
-              //         "url": url
-              //       }
-              //     }
-              //   )
-              // }
-            )
 
 
-          }
+              }
 
-          // User2 is me...Yay!!!
-          else {
+              // User2 is me...Yay!!!
+              else {
 
-            db.collection("userbase").doc(snapshot.data().user1).onSnapshot(snapshot3 =>
-              (
-                setFriendList(
-                  friendlist =>
-                    [
-                      ...friendlist,
-                      {
-                        "id": snapshot3.data().id,
-                        "name": snapshot3.data().name,
-                        "photo": snapshot3.data().photo,
-                        "email": snapshot3.data().email,
-                        "chatURL": url,
-                      }
-                    ]
+                db.collection("userbase").doc(snapshot.data().user1).onSnapshot(snapshot3 =>
+                  (
+                    setFriendList(
+                      friendlist =>
+                        [
+                          ...friendlist,
+                          {
+                            "id": snapshot3.data().id,
+                            "name": snapshot3.data().name,
+                            "photo": snapshot3.data().photo,
+                            "email": snapshot3.data().email,
+                            "chatURL": url,
+                          }
+                        ]
+                    )
+                  )
+
+                  // {
+                  //   dispatch(
+                  //     {
+                  //       type: actionTypes.SET_FRNDLST,
+                  //       allfriendlist:
+                  //       {
+                  //         "id": snapshot2.data().id,
+                  //         "name": snapshot2.data().name,
+                  //         "photo": snapshot2.data().photo,
+                  //         "email": snapshot2.data().email,
+                  //         "url": url
+                  //       }
+                  //     }
+                  //   )
+                  // }
                 )
-              )
 
-              // {
-              //   dispatch(
-              //     {
-              //       type: actionTypes.SET_FRNDLST,
-              //       allfriendlist:
-              //       {
-              //         "id": snapshot2.data().id,
-              //         "name": snapshot2.data().name,
-              //         "photo": snapshot2.data().photo,
-              //         "email": snapshot2.data().email,
-              //         "url": url
-              //       }
-              //     }
-              //   )
-              // }
-            )
+              }
+            })
+          })
+        }
+      }
 
-          }
-        })
-      })
+      setFlag1(false)
     }
+
+    fetchData();
 
     // dispatch({
     //   type: actionTypes.SET_FRNDLST,
     //   allfriendlist: friendlist
     // })
 
-  }, [allchaturls])
+  }, [flag1])
 
   // console.log(allfriendlist)
   console.log(allchaturls)
@@ -201,81 +252,107 @@ function Sidebar() {
 
   console.log(rooms)
 
+  useEffect(() => {
+    console.log("UserDocId:", userDocId, "friendDocId:", friendDocId, "Present1?:", present1)
+    if (userDocId && friendDocId && present1) {
 
-  const [commonchaturl, setCommonChatUrl] = useState('')
-  const [friendChatIds, setFriendChatIds] = useState([])
+      if (present1) {
+        setPresent1(false)
+        return
+      }
+      else {
+        db.collection("chats").add(
+          {
+            user1: userDocId,
+            user2: friendDocId,
+            keepChatAgreement: [true, true]
+          }
+        ).then((docRef) => {
+          console.log("Document written with ID: ", docRef.id);
 
-  const createNewChat = async () => {
-    const email = prompt("Enter Email id of the person you want to chat with:")
-    // const email = "dhavaljavia.p@gmail.com"
-    console.log(`Your entered email is:${email}`)
-    const snapshot = await db.collection("userbase").where("email", '==', `${email}`).get()
-    console.log(snapshot)
-    if (snapshot.empty) {
-      console.log("User not Found!!")
-      return
+          dispatch({
+            type: "COMMON_CHAT_URL",
+            commonchaturl: docRef.id
+          })
+
+          db.collection("userbase").doc(userDocId).collection("user_chats")
+            .add({
+              chatId: docRef.id
+            })
+            .then(function (docRef1) {
+              console.log("ChatDocId added in user_chats with ID: ", docRef1.id);
+            })
+            .catch(function (error) {
+              console.error("Error adding document in user_chats: ", error);
+            });
+        })
+        setPresent1(false)
+      }
     }
-    else {
-      console.log("User Found!!")
-      const friendDocId = snapshot.docs.map(doc => doc.id)
+  }, [present1])
 
-      console.log(db.collection("userbase").doc(userDocId).collection("friends").where("id", "==", `${friendDocId}`).get())
+  useEffect(() => {
+    // Checking if friend is already there in your friendlist or not.
+    // If not, then add new chat id.
+    console.log("UserDocId:", userDocId, "friendDocId:", friendDocId, "Present2?:", present1)
+    if (userDocId && friendDocId) {
+      if (present2) {
+        alert("Ask your friend to add you. He is already there in your records. When both of you add each other, then only you can start chatting.")
+        return
+      }
+      else {
+        db.collection("chats").add(
+          {
+            user1: userDocId,
+            user2: friendDocId,
+            keepChatAgreement: [true, true]
+          }
+        ).then((docRef) => {
+          console.log("Document written with ID: ", docRef.id);
 
-      // Checking if friend is already there in our friendlist or not
-      const snapshot1 = await db.collection("userbase").doc(userDocId).collection("friends").where("id", "==", `${friendDocId}`).get()
+          dispatch({
+            type: "COMMON_CHAT_URL",
+            commonchaturl: docRef.id
+          })
 
-
-      // Friend is not present. Add him
-      if (snapshot1.empty) {
-        console.log("User not in your friendlist. Adding now.")
-        db.collection("userbase").doc(userDocId).collection("friends").add({
-          id: friendDocId[0]
+          db.collection("userbase").doc(userDocId).collection("user_chats")
+            .add({
+              chatId: docRef.id
+            })
+            .then(function (docRef1) {
+              console.log("ChatDocId added in user_chats with ID: ", docRef1.id);
+            })
+            .catch(function (error) {
+              console.error("Error adding document in user_chats: ", error);
+            });
         })
       }
-      // Friend is present
-      else {
-        console.log("friend is already present in your friendlist!!")
-      }
+    }
+  }, [present2])
 
-      // Adding your name in friend's friendlist
+  useEffect(() => {
+    async function fetchData() {
+      console.log("goSetChat:", goSetChat)
+      if (goSetChat) {
 
-      const snapshot_friend = await db.collection("userbase").doc(friendDocId[0]).collection("friends").where("id", "==", `${userDocId}`).get()
+        if (allchaturls.length === 0) {
+          if (friendChatIds.length === 0) {
+            console.log("friend's chat list and your chat list both are empty")
 
-
-      // Friend is not present. Add him
-      if (snapshot_friend.empty) {
-        console.log("You are not in your friend's friendlist. Adding now.")
-        db.collection("userbase").doc(friendDocId[0]).collection("friends").add({
-          id: userDocId
-        })
-      }
-      // Friend is present
-      else {
-        console.log("You are there in your friendlist!! Start Chatting.")
-      }
-
-
-      // Loop through your chats, check each chat if user1/user2 is your new friend, if it is the case, then set commonchaturl to that chatid.
-
-      db.collection("userbase").doc(friendDocId[0]).collection("user_chats").onSnapshot((snapshot) => {
-        setFriendChatIds(snapshot.docs.map(doc => doc.data().ChatId))
-      })
-
-      console.log(friendChatIds)
-
-      if (allchaturls.length === 0) {
-        if (friendChatIds.length === 0) {
-          console.log("ChatList is Empty...creating one now")
-          db.collection("chats")
-            .add(
+            // Create new chat doc and add it in both users' user_chats.
+            db.collection("chats").add(
               {
                 user1: userDocId,
-                user2: friendDocId[0],
+                user2: friendDocId,
                 keepChatAgreement: [true, true]
               }
-            )
-            .then((docRef) => {
+            ).then((docRef) => {
               console.log("Document written with ID: ", docRef.id);
+
+              dispatch({
+                type: "COMMON_CHAT_URL",
+                commonchaturl: docRef.id
+              })
 
               db.collection("userbase").doc(userDocId).collection("user_chats")
                 .add({
@@ -288,100 +365,218 @@ function Sidebar() {
                   console.error("Error adding document in user_chats: ", error);
                 });
 
-              db.collection("userbase").doc(friendDocId[0]).collection("user_chats")
-                .add({
-                  chatId: docRef.id
-                })
-                .then(function (docRef2) {
-                  console.log("ChatDocId added in user_chats with ID: ", docRef2.id);
-                })
-                .catch(function (error) {
-                  console.error("Error adding document in user_chats: ", error);
-                });
+              // db.collection("userbase").doc(friendDocId1).collection("user_chats")
+              //   .add({
+              //     chatId: docRef.id
+              //   })
+              //   .then(function (docRef2) {
+              //     console.log("ChatDocId added in user_chats with ID: ", docRef2.id);
+              //   })
+              //   .catch(function (error) {
+              //     console.error("Error adding document in user_chats: ", error);
+              //   });
 
             })
-        }
-        else {
-          friendChatIds.map(eachFriendChatId => {
-            db.collection("chats").doc(eachFriendChatId).collection("").onSnapshot(snapshot => {
-              console.log("friendChatId:", eachFriendChatId, " Data:", snapshot.data())
 
-              if (snapshot.data().user1 === userDocId || snapshot.data().user2 === userDocId) {
-                console.log("Chat exists with your friend in it. Start Chatting.!!!", eachFriendChatId)
-                setCommonChatUrl(eachFriendChatId)
+          }
+          else {
+            // Friend's chat list is not empty. Search through it and check if you exist there.
+
+
+            friendChatIds.map(async (eachChatId) => {
+              const result = await db.collection("chats").doc(eachChatId).get()
+              console.log("Each FriendChatId Result:", result)
+
+              if (result.data().user1 === userDocId || result.data().user2 === userDocId) {
+                console.log("Existing Chat records Found in your friend's chats. Linking them now.")
+
+
+
+                db.collection("userbase").doc(userDocId).collection("user_chats")
+                  .add({
+                    chatId: eachChatId
+                  })
+                  .then(function (docRef1) {
+                    dispatch({
+                      type: "COMMON_CHAT_URL",
+                      commonchaturl: eachChatId
+                    });
+                    console.log("ChatDocId added in your user_chats with ID: ", docRef1.id);
+                  })
+                  .catch(function (error) {
+                    console.error("Error adding document in user_chats: ", error);
+                  });
+                setPresent1(true);
+                return
               }
 
 
             })
+            // If you are not there in your friend's existing chat list, then create a new chat id and add it in your user_chats as well as ask your friend to add your email in new chat.
+
+
+          }
+        }
+        else {
+          console.log("your chat list is not empty.:", friendlist)
+
+          friendlist.map(async (eachFriendDetail) => {
+            console.log(eachFriendDetail)
+            const friendid = await db.collection("userbase")?.doc(friendDocId).get()
+            if (!friendid.empty) {
+              console.log("friendId:", friendid)
+              if (eachFriendDetail.id === friendid.data().id) {
+                console.log("Friend already exists in your chat records!!");
+
+                setCommonChatUrl1(eachFriendDetail.chatURL);
+                await dispatch({
+                  type: actionTypes.COMMON_CHAT_URL,
+                  commonchaturl: eachFriendDetail.chatURL
+                })
+                setPresent2(true)
+                return
+              }
+            }
+
           })
+
+          //   // if (friendChatIds.length === 0) {
+          //   //   console.log("friend's chat list is empty")
+
+          //   // }
+          //   // else {
+          //   //   friendChatIds.map(async (eachChatId) => {
+          //   //     const result = await db.collection("chats").doc(eachChatId).get()
+          //   //     console.log("Each FriendChatId Result:", result)
+
+          //   //     if (result.data().user1 === userDocId || result.data().user2 === userDocId) {
+          //   //       console.log("Existing Chat records Found in your friend's chats. Linking them now.")
+
+          //   //       db.collection("userbase").doc(userDocId).collection("user_chats")
+          //   //         .add({
+          //   //           chatId: eachChatId
+          //   //         })
+          //   //         .then(function (docRef1) {
+          //   //           console.log("ChatDocId added in your user_chats with ID: ", docRef1.id);
+          //   //         })
+          //   //         .catch(function (error) {
+          //   //           console.error("Error adding document in user_chats: ", error);
+          //   //         });
+          //   //     }
+
+
+          //   //   })
+          //   // }
+
+          // }
+
         }
 
 
-
-      }
-      else {
-        allchaturls.map(url => {
-          const chatDocData = db.collection("chats").doc(url).onSnapshot(snapshot3 => snapshot3.data())
-
-          if (chatDocData.user1 === friendDocId[0] || chatDocData.user2 === friendDocId[0]) {
-            console.log("Chat already exits.", url)
-            setCommonChatUrl(url)
-          }
-          // if not, then create new chat id with user1 as you, user2 as opponent party, get that newly created docId, set it inside user_chats of both you and friend's doc.
-          else {
-            console.log("ChatId does not exist in your user_chats")
-            db.collection("chats")
-              .add({
-                user1: userDocId,
-                user2: friendDocId[0],
-                keepChatAgreement: [true, true]
-              })
-              .then((docRef) => {
-                console.log("Document written with ID: ", docRef.id);
-
-                db.collection("userbase").doc(userDocId).collection("user_chats")
-                  .add({
-                    chatId: docRef.id
-                  })
-                  .then(function (docRef1) {
-                    console.log("ChatDocId added in user_chats with ID: ", docRef1.id);
-                  })
-                  .catch(function (error) {
-                    console.error("Error adding document in user_chats: ", error);
-                  });
-
-                db.collection("userbase").doc(friendDocId[0]).collection("user_chats")
-                  .add({
-                    chatId: docRef.id
-                  })
-                  .then(function (docRef2) {
-                    console.log("ChatDocId added in user_chats with ID: ", docRef2.id);
-                  })
-                  .catch(function (error) {
-                    console.error("Error adding document in user_chats: ", error);
-                  });
-
-
-              })
-              .catch((error) => {
-                console.error("Error adding document: ", error);
-              });
-          }
-        })
-
-        // checking if your user id  is presnet in friend's user_chats list.
-
-        db.collection("userbase").doc(friendDocId[0]).collection("user_chats").onSnapshot(snapshot => {
-          snapshot.docs.map(doc => {
-            const fChatId = doc.data().chatId;
-            const fChatIdData = db.collection("chats").doc(fChatId).get()
-            console.log(fChatIdData)
-          })
-        })
+        setGoSetChat(false)
       }
     }
+    fetchData();
 
+  }, [goSetChat])
+
+  const createNewChat = async () => {
+
+    const email = prompt("Enter Email id of the person you want to chat with:")
+    // const email = "dj0024javia@gmail.com"
+    console.log(`Your entered email is:${email}`)
+    const snapshot = await db.collection("userbase").where("email", '==', `${email}`).get()
+    console.log(snapshot)
+    if (snapshot.empty) {
+      console.log("User not Found!!")
+      return
+    }
+    else {
+      console.log("User Found!!")
+
+      const friendDocId1 = snapshot.docs.map(doc => doc.id)[0]
+
+      await dispatch({
+        type: actionTypes.SET_FRNDDOCID,
+        friendDocId: friendDocId1
+      })
+
+      setFlag3(true)
+
+      console.log("friendDocID:", friendDocId1)
+      // setFriendDocId(friendDocId1[0])
+
+      console.log(await db.collection("userbase").doc(userDocId).collection("friends").where("id", "==", `${friendDocId1}`).get())
+
+      // Checking if friend is already there in our friendlist or not
+      const snapshot1 = await db.collection("userbase").doc(userDocId).collection("friends").where("id", "==", `${friendDocId1}`).get()
+
+
+      // Friend is not present. Add him
+      if (snapshot1.empty) {
+        console.log("User not in your friendlist. Adding now.")
+        db.collection("userbase").doc(userDocId).collection("friends").add({
+          id: friendDocId1
+        })
+      }
+      // Friend is present
+      else {
+        console.log("friend is already present in your friendlist!!")
+      }
+
+      // Adding your name in friend's friendlist
+
+      const snapshot_friend = await db.collection("userbase").doc(friendDocId1).collection("friends").where("id", "==", `${userDocId}`).get()
+
+
+      // Friend is not present. Add him
+      if (snapshot_friend.empty) {
+        console.log("You are not in your friend's friendlist. Adding now.")
+        db.collection("userbase").doc(friendDocId1).collection("friends").add({
+          id: userDocId
+        })
+      }
+      // Friend is present
+      else {
+        console.log("You are there in your friendlist!! Start Chatting.")
+      }
+
+      // Checking if friend is alreday there in our chats.
+
+
+      // FriendChatIds setup here
+
+
+
+
+
+      console.log("My Chat URLs':", allchaturls)
+      console.log("Friend's Chat URLs':", friendChatIds)
+
+      console.log("Reducer FriendDoc:", friendDocId)
+      setGoSetChat(true)
+    }
+
+
+    // End of createChat Function
   }
+
+
+
+  // useEffect(() => {
+  //   console.log("Flag4:", flag4)
+  //   if (flag4) {
+  //     setChat()
+  //     setFlag4(false)
+  //   }
+  // }, [flag4])
+
+
+
+
+
+
+  // End of Set Chat Function
 
   return (
     <div className="sidebar">
