@@ -258,3 +258,137 @@ const createNewChat = async () => {
 
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+useEffect(() => {
+    async function fetchData() {
+        console.log("Flag1:", flag1, "AllChatURLs:", allchaturls, "AllChatURL Length:", allchaturls.length)
+        if (flag1 && allchaturls) {
+            // const temp = []
+            // setFriendList(temp);
+            if (allchaturls.length !== 0) {
+
+                allchaturls.map(url => {
+                    db.collection("chats").doc(url).onSnapshot((snapshot) => {
+                        // Checking if user1 is me??
+                        console.log(snapshot)
+                        if (snapshot.data().user1 === userDocId) {
+
+                            db.collection("userbase").doc(snapshot.data().user2).onSnapshot((snapshot2) =>
+                                // (
+                                //   setFriendList(
+                                //     friendlist =>
+                                //       [
+                                //         ...friendlist,
+                                //         {
+                                //           "id": snapshot2.data().id,
+                                //           "name": snapshot2.data().name,
+                                //           "photo": snapshot2.data().photo,
+                                //           "email": snapshot2.data().email,
+                                //           "chatURL": url,
+                                //         }
+                                //       ]
+                                //   )
+                                // )
+                                dispatch({
+                                    type: actionTypes.SET_FRNDLST,
+                                    allfriendlist:
+                                    {
+                                        "id": snapshot2.data().id,
+                                        "name": snapshot2.data().name,
+                                        "photo": snapshot2.data().photo,
+                                        "email": snapshot2.data().email,
+                                        "chatURL": url,
+                                    }
+                                })
+                            )
+
+
+                        }
+
+                        // User2 is me...Yay!!!
+                        else {
+
+                            db.collection("userbase").doc(snapshot.data().user1).onSnapshot((snapshot3) =>
+                                // (
+                                //   setFriendList(
+                                //     friendlist =>
+                                //       [
+                                //         ...friendlist,
+                                //         {
+                                //           "id": snapshot3.data().id,
+                                //           "name": snapshot3.data().name,
+                                //           "photo": snapshot3.data().photo,
+                                //           "email": snapshot3.data().email,
+                                //           "chatURL": url,
+                                //         }
+                                //       ]
+                                //   )
+                                // )
+
+                                dispatch(
+                                    {
+                                        type: actionTypes.SET_FRNDLST,
+                                        allfriendlist:
+                                        {
+                                            "id": snapshot3.data().id,
+                                            "name": snapshot3.data().name,
+                                            "photo": snapshot3.data().photo,
+                                            "email": snapshot3.data().email,
+                                            "url": url
+                                        }
+                                    }
+                                )
+
+                                // {
+                                //   dispatch(
+                                //     {
+                                //       type: actionTypes.SET_FRNDLST,
+                                //       allfriendlist:
+                                //       {
+                                //         "id": snapshot2.data().id,
+                                //         "name": snapshot2.data().name,
+                                //         "photo": snapshot2.data().photo,
+                                //         "email": snapshot2.data().email,
+                                //         "url": url
+                                //       }
+                                //     }
+                                //   )
+                                // }
+                            )
+
+                        }
+                    })
+                })
+            }
+        }
+
+        setFlag1(false)
+    }
+
+    fetchData();
+
+    // dispatch({
+    //   type: actionTypes.SET_FRNDLST,
+    //   allfriendlist: friendlist
+    // })
+
+}, [flag1, allchaturls])

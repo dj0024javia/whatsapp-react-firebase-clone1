@@ -23,7 +23,7 @@ function Sidebar() {
   const [present1, setPresent1] = useState(false)
   const [present2, setPresent2] = useState(false)
 
-  const [{ user, userDocId, friendDocId, commonchaturl }, dispatch] = useStateValue();
+  const [{ user, userDocId, friendDocId, commonchaturl, allfriendlist }, dispatch] = useStateValue();
   // const [exeuseEf, setExeUseEf] = useState(false);
   const { chatId } = useParams()
 
@@ -61,9 +61,8 @@ function Sidebar() {
 
   useEffect(() => {
     async function fetchData() {
-      const temp = []
-      setAllChatUrls(temp)
-      await db.collection("userbase").doc(`${userDocId}`).collection("user_chats").onSnapshot((snapshot) =>
+
+      db.collection("userbase").doc(`${userDocId}`).collection("user_chats").onSnapshot((snapshot) =>
         (setAllChatUrls(snapshot.docs.map(doc => doc.data().chatId)))
       )
       console.log(`All Chat URLs:${allchaturls}`)
@@ -117,76 +116,55 @@ function Sidebar() {
   useEffect(() => {
     async function fetchData() {
       console.log("Flag1:", flag1, "AllChatURLs:", allchaturls, "AllChatURL Length:", allchaturls.length)
-      if (flag1 && allchaturls) {
+      if (allchaturls) {
         // const temp = []
         // setFriendList(temp);
         if (allchaturls.length !== 0) {
 
-          allchaturls.map(url => {
-            db.collection("chats").doc(url).onSnapshot(snapshot => {
-              // Checking if user1 is me??
-              if (snapshot.data().user1 === userDocId) {
-
-                db.collection("userbase").doc(snapshot.data().user2).onSnapshot(snapshot2 =>
-                  (
-                    setFriendList(
-                      friendlist =>
-                        [
-                          ...friendlist,
-                          {
-                            "id": snapshot2.data().id,
-                            "name": snapshot2.data().name,
-                            "photo": snapshot2.data().photo,
-                            "email": snapshot2.data().email,
-                            "chatURL": url,
-                          }
-                        ]
-                    )
-                  )
-                )
-
+          allchaturls.map(async (url) => {
+            console.log(url)
+            const result = await db.collection("chats").doc(url).get()
+            console.log(result)
+            if (!result.empty) {
+              console.log(result.data())
+              if (result.data().user1 === userDocId) {
+                const result2 = await db.collection("userbase").doc(result.data().user2).get()
+                console.log(result2.data())
+                if (!result2.empty) {
+                  const temp = {
+                    "id": result2.data().id,
+                    "name": result2.data().name,
+                    "photo": result2.data().photoURL,
+                    "email": result2.data().email,
+                    "chatURL": url,
+                  }
+                  dispatch({
+                    type: actionTypes.SET_FRNDLST,
+                    allfriendlist: temp
+                  })
+                }
 
               }
-
-              // User2 is me...Yay!!!
               else {
-
-                db.collection("userbase").doc(snapshot.data().user1).onSnapshot(snapshot3 =>
-                  (
-                    setFriendList(
-                      friendlist =>
-                        [
-                          ...friendlist,
-                          {
-                            "id": snapshot3.data().id,
-                            "name": snapshot3.data().name,
-                            "photo": snapshot3.data().photo,
-                            "email": snapshot3.data().email,
-                            "chatURL": url,
-                          }
-                        ]
-                    )
-                  )
-
-                  // {
-                  //   dispatch(
-                  //     {
-                  //       type: actionTypes.SET_FRNDLST,
-                  //       allfriendlist:
-                  //       {
-                  //         "id": snapshot2.data().id,
-                  //         "name": snapshot2.data().name,
-                  //         "photo": snapshot2.data().photo,
-                  //         "email": snapshot2.data().email,
-                  //         "url": url
-                  //       }
-                  //     }
-                  //   )
-                  // }
-                )
-
+                const result3 = await db.collection("userbase").doc(result.data().user1).get()
+                console.log(result3.data())
+                if (!result3.empty) {
+                  const temp = {
+                    "id": result3.data().id,
+                    "name": result3.data().name,
+                    "photo": result3.data().photoURL,
+                    "email": result3.data().email,
+                    "chatURL": url,
+                  }
+                  dispatch({
+                    type: actionTypes.SET_FRNDLST,
+                    allfriendlist: temp
+                  })
+                }
               }
-            })
+
+            }
+
           })
         }
       }
@@ -201,34 +179,11 @@ function Sidebar() {
     //   allfriendlist: friendlist
     // })
 
-  }, [flag1])
+  }, [allchaturls])
 
   // console.log(allfriendlist)
   console.log(allchaturls)
-  // console.log(friendlist)
 
-
-  // useEffect(() => {
-
-  //   db.collection("userbase").doc(`${userDocId}`)
-  //     .collection('friends')
-  //     .onSnapshot((snapshot) => {
-  //       setFriendList(snapshot.docs.map(
-  //         doc => doc.data().id
-
-  //         // db.collection('chats')
-  //         //   .doc(`${chatURL}`)
-  //         //   .collection('chat_messages')
-  //         //   .orderBy('timestamp', 'asc')
-  //         //   .onSnapshot(snapshot => {
-  //         //     setAllUserMsgs(...allusermsgs, snapshot.docs.map(doc => doc.data()))
-  //         //   })
-
-  //       ))
-
-  //     })
-
-  // }, [userDocId])
 
   console.log("Friendlist is", friendlist)
 
@@ -258,6 +213,7 @@ function Sidebar() {
 
       if (present1) {
         setPresent1(false)
+
         return
       }
       else {
@@ -286,6 +242,7 @@ function Sidebar() {
               console.error("Error adding document in user_chats: ", error);
             });
         })
+
         setPresent1(false)
       }
     }
@@ -334,7 +291,7 @@ function Sidebar() {
     async function fetchData() {
       console.log("goSetChat:", goSetChat)
       if (goSetChat) {
-
+        console.log("AllChatUrls:", allchaturls, "friendChatIds:", friendChatIds)
         if (allchaturls.length === 0) {
           if (friendChatIds.length === 0) {
             console.log("friend's chat list and your chat list both are empty")
@@ -418,7 +375,7 @@ function Sidebar() {
           }
         }
         else {
-          console.log("your chat list is not empty.:", friendlist)
+          console.log("your chat list is not empty.:", allchaturls)
 
           friendlist.map(async (eachFriendDetail) => {
             console.log(eachFriendDetail)
@@ -479,6 +436,11 @@ function Sidebar() {
     fetchData();
 
   }, [goSetChat])
+
+  useEffect(() => {
+    console.log(allfriendlist)
+
+  }, [allfriendlist])
 
   const createNewChat = async () => {
 
@@ -641,7 +603,7 @@ function Sidebar() {
 
         <div className="sidebar__chat__users">
           <h2>Users</h2>
-          {friendlist.map((friend) => (
+          {allfriendlist.map((friend) => (
             <Sidebarchat
               key={friend.id}
               id={friend.chatURL}

@@ -33,8 +33,10 @@ const reducer = (state, action) => {
                 ...state, userDocId: action.userDocId
             }
         case actionTypes.SET_FRNDLST:
+            console.log(state)
+            console.log(action.allfriendlist)
             return {
-                ...state, allfriendlist: [...state.allfriendlist, action.friendlist]
+                ...state, allfriendlist: [...state.allfriendlist, action.allfriendlist]
             }
         case actionTypes.SET_FRNDDOCID:
             return {
