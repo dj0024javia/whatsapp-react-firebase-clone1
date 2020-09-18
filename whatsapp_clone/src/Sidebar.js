@@ -586,8 +586,20 @@ function Sidebar() {
       </div>
 
       <div className="sidebar__chats">
-
         <Sidebarchat addNewChat />
+
+        <div className="sidebar__chat__users">
+          <h2>Users</h2>
+          {allfriendlist.map((friend) => (
+            <Sidebarchat
+              key={friend.id}
+              id={friend.chatURL}
+              roomname={friend.name}
+              user={true}
+              photo={friend.photoURL}
+            />
+          ))}
+        </div>
 
         <div className="sidebar__chat__rooms">
           <h2>Rooms</h2>
@@ -600,19 +612,6 @@ function Sidebar() {
             />
           ))}
         </div>
-
-        <div className="sidebar__chat__users">
-          <h2>Users</h2>
-          {allfriendlist.map((friend) => (
-            <Sidebarchat
-              key={friend.id}
-              id={friend.chatURL}
-              roomname={friend.name}
-              user={true}
-            />
-          ))}
-        </div>
-
 
       </div>
     </div>

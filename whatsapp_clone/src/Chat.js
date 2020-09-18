@@ -126,8 +126,9 @@ function Chat() {
         </div>
 
       </div>
+
       {roomId ? (
-        <div className="chat__window">
+        <div className="chat__window" id="messages">
           {
             allmessages.map(
               (eachmessage) => (
@@ -141,6 +142,7 @@ function Chat() {
             )
           }
         </div>
+
       ) : (
           <div className="chat__window">
             {
